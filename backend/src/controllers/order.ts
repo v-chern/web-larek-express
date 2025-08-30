@@ -1,16 +1,17 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { faker } from '@faker-js/faker';
 
-import { isValidOrder } from "../utils/orderUtils";
+import { validateOrder } from "../utils/orderUtils";
 
-export const createOrder = (req: Request, res: Response) => {
+export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   const order = req.body;
-
-  if (isValidOrder(order)) {
+  try {
+    await validateOrder(order);
     return res.status(200).send({
       "id": faker.string.uuid(),
       "total": 750
     });
+  } catch (err: any) {
+    next(err);
   }
-  return res.status(400).send({ message: 'Incorrect order data' });
 }

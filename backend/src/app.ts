@@ -1,12 +1,15 @@
 import path from 'path';
-import express from 'express';
+import express, { NextFunction } from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
 import { DB_ADDRESS, PORT } from './utils/constants';
 
+import { errorHandler } from './middlewares/errorHandler';
+
 import productRouter from './routes/product';
 import orderRouter from './routes/order';
+import NotFoundError from './errors/notFoundError';
 
 mongoose.connect(DB_ADDRESS);
 
@@ -17,6 +20,8 @@ app.use(express.json());
 
 app.use('/product', productRouter);
 app.use('/order', orderRouter);
+
+app.use(errorHandler);
 
 app.use(express.static(path.join(__dirname, 'public')));
 

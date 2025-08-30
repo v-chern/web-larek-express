@@ -7,17 +7,7 @@
  */
 
 import mongoose, {Schema, model} from "mongoose";
-
-export interface IProduct {
-  title: string;
-  image: {
-    fileName : string;
-    originalName: string;
-  };
-  category: string;
-  description?: string;
-  price?: number | null;
-}
+import { IProduct } from "../utils/types";
 
 const productSchema = new Schema<IProduct>({
   title: {
