@@ -1,13 +1,14 @@
 /**
  * title — название товара, строка от 2 до 30 символов, обязательное поле, уникальное.
- * image — путь до файла и метаинформация об изображении, объект вида { fileName: string, originalName: string; }, обязательно поле.
+ * image — путь до файла и метаинформация об изображении, объект вида
+ *         { fileName: string, originalName: string; }, обязательно поле.
  * category — категория товара, строка, обязательное поле.
  * description — описание товара, строка, необязательное поле.
  * price — цена товара, число, необязательное поле, по умолчанию null.
  */
 
-import mongoose, {Schema, model} from "mongoose";
-import { IProduct } from "../utils/types";
+import { Schema, model } from 'mongoose';
+import { IProduct } from '../utils/types';
 
 const productSchema = new Schema<IProduct>({
   title: {
@@ -15,7 +16,7 @@ const productSchema = new Schema<IProduct>({
     required: [true, 'Поле "title" должно быть заполнено'],
     minlength: [2, 'Минимальная длина поля "title" - 2'],
     maxlength: [30, 'Максимальная длина поля "title" - 30'],
-    unique: true
+    unique: true,
   },
   image: {
     fileName: {
@@ -24,21 +25,22 @@ const productSchema = new Schema<IProduct>({
     },
     originalName: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   category: {
     type: String,
-    required: true
+    required: true,
   },
   description: {
     type: String,
-    required: true
+    required: true,
   },
   price: {
     type: Number,
-    default: null
-  }
+    min: 0,
+    default: null,
+  },
 });
 
 export default model<IProduct>('product', productSchema);

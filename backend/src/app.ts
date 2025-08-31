@@ -1,13 +1,14 @@
 import path from 'path';
-import express, { NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
-import { errors } from 'celebrate';
+import { errors as celebrateErrors } from 'celebrate';
 
-import { DB_ADDRESS, PORT } from './utils/constants';
+import { DB_ADDRESS, PORT } from './config';
 
 import errorHandler from './middlewares/errorHandler';
 import notFound from './middlewares/notFound';
+import { errorsLogger, requestsLogger } from './middlewares/logger';
 
 import productRouter from './routes/product';
 import orderRouter from './routes/order';
@@ -19,15 +20,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(requestsLogger);
+
 app.use('/product', productRouter);
 app.use('/order', orderRouter);
+
 app.use(notFound);
 
-app.use(errors());
+app.use(celebrateErrors());
+
+app.use(errorsLogger);
 
 app.use(errorHandler);
-
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
