@@ -12,9 +12,9 @@ import { IProduct } from "../utils/types";
 const productSchema = new Schema<IProduct>({
   title: {
     type: String,
-    required: [true, 'title is required'],
-    minlength: 2,
-    maxlength: 30,
+    required: [true, 'Поле "title" должно быть заполнено'],
+    minlength: [2, 'Минимальная длина поля "title" - 2'],
+    maxlength: [30, 'Максимальная длина поля "title" - 30'],
     unique: true
   },
   image: {

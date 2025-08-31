@@ -1,17 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { faker } from '@faker-js/faker';
 
-import { validateOrder } from "../utils/orderUtils";
+import { validateOrderContent } from "../utils/orderUtils";
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   const order = req.body;
   try {
-    await validateOrder(order);
+    await validateOrderContent(order);
     return res.status(200).send({
       "id": faker.string.uuid(),
-      "total": 750
+      "total": order.total
     });
-  } catch (err: any) {
+  } catch (err) {
     next(err);
-  }
+  } 
 }

@@ -11,55 +11,46 @@
  * address — строка, обязательное.
  */
 
-import {Types, isValidObjectId} from 'mongoose';
+import { Types, isValidObjectId } from 'mongoose';
+import { celebrate, Joi, Segments } from 'celebrate';
+
 import { IProduct, IOrder, PaymentType } from "./types";
-import { EMAIL_FORMAT } from './constants';
+import { PHONE_PATTERN, ORDER_VALIDATION_MSG } from './constants';
 
 import Product from '../models/product';
 
-const isItemsAndTotalValid = async (items: string[], total: number) => {
+import BadRequestError from '../errors/badRequestError';
+
+const orderSchema = Joi.object({
+  payment: Joi.string().valid(...Object.values(PaymentType)).required(),
+  email: Joi.string().trim().email({ tlds: { allow: false } }).required(),
+  phone: Joi.string().trim().pattern(PHONE_PATTERN).required(),
+  address: Joi.string().trim().min(1).max(300).required(),
+  total: Joi.number().integer().min(0).required(),
+  items: Joi.array().items(Joi.string()).min(1).required()
+})
+  .unknown(false);
+
+export const orderBodyValidator = celebrate(
+  { [Segments.BODY]: orderSchema },
+  { abortEarly: false}
+);
+
+export const validateOrderContent = async (value: IOrder) => {
+  const {items, total} = value;
+  console.log(items, total);
   const objectIds = items.filter(isValidObjectId).map(id => new Types.ObjectId(id));
 
   return Product.find({ _id: { $in: objectIds} }, {price: 1})
       .lean()
       .then((products) => {
-        if (products.length !== items.length) throw new Error('Product IDs not found');
+        if (products.length !== items.length) throw new BadRequestError(ORDER_VALIDATION_MSG);
         const orderSum = products.reduce((sum, p:IProduct) => {
-          if (!p.price) throw new Error('Product price is null');
+          if (!p.price) new BadRequestError(ORDER_VALIDATION_MSG);
           return sum + (p.price ?? 0);
         }, 0);
 
-        if (orderSum !== total) throw new Error('Incorrect order sum');
-        return true;
+        if (orderSum !== total) throw new BadRequestError(ORDER_VALIDATION_MSG);
+        return value;
       })
 }
-
-const isPaymentValid = (payment: PaymentType) => {
-  if (!Object.values(PaymentType).includes(payment)) throw new Error(`Incorrect payment type ${payment}`)
-  return true;
-}
-
-const isEmailValid = (email: string) => {
-  if (!email || !EMAIL_FORMAT.test(email)) throw new Error(`Incorrect email format ${email}`);
-  return true;
-}
-
-const isPhoneValid = (phone: string) => {
-  if (!phone || (typeof phone !== 'string')) throw new Error(`Incorrect phone format ${phone}`);
-  return true;
-}
-
-const isAddressValid = (address: string) => {
-  if (!address || (typeof address !== 'string')) throw new Error(`Incorrect address format ${address}`);
-  return true;
-}
-
-export const validateOrder = async (orderData: IOrder) => {
-  console.log();
-  const orderStatus = await isItemsAndTotalValid(orderData.items, orderData.total) 
-    && isPaymentValid(orderData.payment)
-    && isEmailValid(orderData.email)
-    && isPhoneValid(orderData.phone)
-    && isAddressValid(orderData.address);
-  return orderStatus;
-};
